@@ -3,9 +3,7 @@
 #include "yssimplesound.h"
 #include "yspng.h"
 #include "common.h"
-//#include "character.h"
-//#include "item.h"
-//#include "map.h"
+#include "Map.h"
 
 using namespace std;
 
@@ -15,47 +13,14 @@ const int windowHeight = 800;
 int main(void)
 {
     // Initailization
-    YsSoundPlayer::SoundData playerSound;
-    YsSoundPlayer::SoundData enemySound;
-    YsSoundPlayer::SoundData itemSound;
-    YsRawPngDecoder playerPng;
-    YsRawPngDecoder enemyPng;
-    YsRawPngDecoder itemPng;
-//    Player player = NULL;
-//    Enemy[] enemies = NULL;
-//    Item[] items = NULL;
-//    Map map = NULL;
+    Map map;
     
     FsChangeToProgramDir();
-    // Load wav files
-    if (!loadWav(playerSound, enemySound, itemSound)) {
+    // Load the map
+    if (!map.LoadFromFile("map.txt"))
+    {
         return 0;
     }
-    
-    // Load png files
-    if (!loadPng(playerPng, enemyPng, itemPng)) {
-        return 0;
-    }
-    
-    // Initiate instances
-//    while (!player || !enemies || !items) {
-//        // Early stop if pressing ESC key
-//        auto key=FsInkey();
-//        if(FSKEY_ESC==key)
-//        {
-//            break;
-//        }
-//        // Loop until the instances are created at the valid coordinates
-//        player = spawnPlayer(playerPng, playerSound);
-//        enemies = spawnEnemies(enemyPng, enemySound);
-//        items = spawnItems(itemPng, itemSound);
-//    }
-//
-//    map = createMap(player, enemies, items);
-//    if (!map) {
-//        printf("Error! Did not create the map successfully.\n");
-//        return 0;
-//    }
     
     FsOpenWindow(0, 0, windowWidth, windowHeight, 1);
     for (;;) {
@@ -71,37 +36,36 @@ int main(void)
         switch(key) {
             // Handle movement
             case FSKEY_UP:
+                map.UpdatePlayerPosition(map.GetPlayerRow() - 1, map.GetPlayerCol());
+                break;
             case FSKEY_DOWN:
+                map.UpdatePlayerPosition(map.GetPlayerRow() + 1, map.GetPlayerCol());
+                break;
             case FSKEY_LEFT:
+                map.UpdatePlayerPosition(map.GetPlayerRow(), map.GetPlayerCol() - 1);
+                break;
             case FSKEY_RIGHT:
-//                player.updatePlayerPosition(key);
+                map.UpdatePlayerPosition(map.GetPlayerRow(), map.GetPlayerCol() + 1);
                 break;
             // Handle attack
             case FSKEY_SPACE:
-//                player.attackTheDirection();
                 break;
         }
-        
-        // Pick an item if any after updaing the position
-//        player.pickItemIfAny();
-        
-        // Update the map rendering after the changes in this iteration
-//        map.updateMap();
-        
-        // Check if the game is over (at the goal tile or the player died)
-//        if (player.isGameOver()) {
-//            printf("You died!\n");
-//            break;
-//        }
-//        if (map.isGameOver()) {
-//            printf("You win the game!\n");
-//            break;
-//        }
 
+        // Clear the screen before drawing
         glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
-        FsSwapBuffers();
 
-        FsSleep(1);
+        // Draw the map
+        map.Draw();
+
+        // Check if the player is at the goal tile of the current map
+        if (map.IsGameOver()) {
+            printf("You win the game!\n");
+            break;
+        }
+
+        FsSwapBuffers();
+        FsSleep(10);
     }
     
     return 0;
