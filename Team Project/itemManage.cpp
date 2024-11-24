@@ -1,56 +1,40 @@
+#ifndef ITEM_MANAGE_H
+#define ITEM_MANAGE_H
+
 #include <stdio.h>
 #include <iostream>
 #include <vector>
 #include "fssimplewindow.h"
 #include "yssimplesound.h"
 #include "yspng.h"
+#include <math.h>
 
-enum ItemState { ONMAP, ONPLAYER }; // States for an item
+#endif // ITEM_MANAGE_H
 
-class MovingCircle {
-public:
-    int x, y; // Position of the circle
-    int radius; // Radius of the circle
-
-    MovingCircle(int startX, int startY, int rad) : x(startX), y(startY), radius(rad) {}
-
-    void Move(int dx, int dy) {
-        x += dx;
-        y += dy;
-    }
-
-    void Draw() const {
-        glBegin(GL_TRIANGLE_FAN);
-        glVertex2i(x, y); // Center of the circle
-        for (int i = 0; i <= 360; ++i) {
-            double angle = i * 3.14159 / 180.0;
-            int cx = x + radius * cos(angle);
-            int cy = y + radius * sin(angle);
-            glVertex2i(cx, cy);
-        }
-        glEnd();
-    }
-};
 
 class Item {
 public:
-    std::string name;
-    int x, y; // Position of the item
-    ItemState state; // Current state of the item
-    YsRawPngDecoder png;
-    YsSoundPlayer::SoundData sound;
-    bool imageLoaded = false;
-    bool soundLoaded = false;
+    enum ItemState { ONMAP, ONPLAYER }; // States for an item
 
-    Item(const std::string& name, int x, int y, const char* imageFile, const char* soundFile)
-        : name(name), x(x), y(y), state(ONMAP) {
+    std::string name;            // Item's name
+    ItemState state;             // Current state of the item
+    int effectCode;              // Numeric code representing the item's effect
+    YsRawPngDecoder png;         // Image data
+    YsSoundPlayer::SoundData sound; // Sound data
+    bool imageLoaded = false;    // Flag for image load success
+    bool soundLoaded = false;    // Flag for sound load success
+
+    // Constructor
+    Item(const std::string& name, int effectCode, const char* imageFile, const char* soundFile)
+        : name(name), state(ONMAP), effectCode(effectCode) {
         LoadImage(imageFile);
         LoadSound(soundFile);
     }
 
+    // Load image file
     bool LoadImage(const char* filename) {
         if (YSOK == png.Decode(filename)) {
-            png.Flip();
+            png.Flip();  // Flip vertically for OpenGL compatibility
             imageLoaded = true;
             return true;
         }
@@ -58,6 +42,7 @@ public:
         return false;
     }
 
+    // Load sound file
     bool LoadSound(const char* filename) {
         if (YSOK == sound.LoadWav(filename)) {
             soundLoaded = true;
@@ -67,124 +52,117 @@ public:
         return false;
     }
 
-    void Draw(const MovingCircle& player) {
-        if (state == ONPLAYER) {
-            x = player.x;
-            y = player.y;
-        }
+    // Draw item at the specified position
+    void Draw(int drawX, int drawY) {
         if (!imageLoaded) return;
 
-        float scaleX = 40.0f / png.wid; // Horizontal scaling factor
-        float scaleY = 40.0f / png.hei; // Vertical scaling factor
-        glRasterPos2i(x, y);            // Set position
-        glPixelZoom(scaleX, scaleY);    // Scale to 40x40 pixels
+        float scaleX = 40.0f / png.wid; 
+        float scaleY = 40.0f / png.hei; 
+        glRasterPos2i(drawX, drawY);    
+        glPixelZoom(scaleX, scaleY);   
         glDrawPixels(png.wid, png.hei, GL_RGBA, GL_UNSIGNED_BYTE, png.rgba);
-        glPixelZoom(1.0f, 1.0f);        // Reset scaling to normal
+        glPixelZoom(1.0f, 1.0f);       
     }
 
-    void PlaySound(YsSoundPlayer& player) {
-        if (soundLoaded) {
-            player.PlayOneShot(sound);
-        }
-    }
-
-    void TriggerEffect(YsSoundPlayer& player) {
-        PlaySound(player);
-        std::cout << "Effect triggered for: " << name << std::endl;
-    }
-
-    void Pickup() {
-        state = ONPLAYER;
-    }
-
-    bool IsCollidingWith(const MovingCircle& player) const {
-        int dx = x - player.x;
-        int dy = y - player.y;
-        return (dx * dx + dy * dy) <= (player.radius * player.radius);
-    }
 };
 
-int main() {
-    FsChangeToProgramDir();
+int TriggerEffect(Item* heroHoldItem, YsSoundPlayer& player) {
+    if (heroHoldItem == nullptr) {
+        std::cout << "Hero is not holding any item!" << std::endl;
+        return 0; // Return 0 to indicate no effect triggered
+    }
 
-    // Initialize the sound player
+    // Play the sound associated with the item
+    if (heroHoldItem->soundLoaded) {
+        player.PlayOneShot(heroHoldItem->sound);
+        std::cout << "Playing sound for: " << heroHoldItem->name << std::endl;
+    }
+    else {
+        std::cout << "No sound available for: " << heroHoldItem->name << std::endl;
+    }
+
+    // Perform item-specific actions and return the effect code
+    if (heroHoldItem->name == "Gun") {
+        std::cout << "Gun effect triggered" << std::endl;
+        return 1; // Gun effect code
+    }
+    else if (heroHoldItem->name == "Health Potion") {
+        std::cout << "Health Potion effect triggered" << std::endl;
+        return 2; // Health potion effect code
+    }
+    else if (heroHoldItem->name == "Sword") {
+        std::cout << "Sword effect triggered" << std::endl;
+        return 3; // Sword effect code
+    }
+    else {
+        std::cout << "Currently No Item " << heroHoldItem->name << std::endl;
+        return 0; // Unknown effect code
+    }
+}
+
+
+
+
+//main function just for testing
+int main() {
+    FsOpenWindow(0, 0, 800, 600, 1, "Item Drawing Example");
+
+    // Enable blending for transparency
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Initialize sound player
     YsSoundPlayer player;
     player.MakeCurrent();
     player.Start();
 
-    // Create items
-    Item gun("Gun", 100, 500, "gun.png", "gun.wav");
-    Item healthPotion("Health Potion", 300, 500, "hp.png", "hp.wav");
-    Item sword("Sword", 600, 600, "sword.png", "sword.wav");
+    // Create Item objects
+    Item gun("Gun", 1, "gun.png", "gun.wav");
+    Item healthPotion("Health Potion", 2, "hp.png", "hp.wav");
+    Item sword("Sword", 3, "sword.png", "sword.wav");
 
-    FsOpenWindow(0, 0, 800, 800, 1, "Multiple Items with Sound Effects");
-    glEnable(GL_BLEND);  // Enable blending
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // Set the blend function
+    // Hero's currently held item (just for testing)
+    Item* heroHoldItem = &gun;
+
     bool terminate = false;
-
-    MovingCircle circle(400, 400, 20);
 
     while (!terminate) {
         FsPollDevice();
         int key = FsInkey();
 
-        // Handle input
-        switch (key) {
-        case FSKEY_ESC:
+        if (key == FSKEY_ESC) {
             terminate = true;
-            break;
-        case FSKEY_UP:
-            circle.Move(0, -10); // Move up
-            break;
-        case FSKEY_DOWN:
-            circle.Move(0, 10); // Move down
-            break;
-        case FSKEY_LEFT:
-            circle.Move(-10, 0); // Move left
-            break;
-        case FSKEY_RIGHT:
-            circle.Move(10, 0); // Move right
-            break;
-        case FSKEY_1:
-            gun.TriggerEffect(player);
-            break;
-        case FSKEY_2:
-            healthPotion.TriggerEffect(player);
-            break;
-        case FSKEY_3:
-            sword.TriggerEffect(player);
-            break;
         }
 
-        // Check for item pickup
-        if (gun.state == ONMAP && gun.IsCollidingWith(circle)) {
-            gun.Pickup();
-            std::cout << "Picked up: Gun" << std::endl;
-        }
-        if (healthPotion.state == ONMAP && healthPotion.IsCollidingWith(circle)) {
-            healthPotion.Pickup();
-            std::cout << "Picked up: Health Potion" << std::endl;
-        }
-        if (sword.state == ONMAP && sword.IsCollidingWith(circle)) {
-            sword.Pickup();
-            std::cout << "Picked up: Sword" << std::endl;
+        if (key == FSKEY_SPACE) {
+            // Trigger the effect and get the effect code
+            int effectCode = TriggerEffect(heroHoldItem, player);
+            std::cout << "Effect code returned: " << effectCode << std::endl;
         }
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Draw the circle and items
-        glColor3ub(255, 0, 0); // Set circle color to red
-        circle.Draw();
-
-        gun.Draw(circle);
-        healthPotion.Draw(circle);
-        sword.Draw(circle);
+        // Draw the items at specific positions
+        gun.Draw(100, 200);         // Draw gun at (100, 200)
+        healthPotion.Draw(300, 500); // Draw health potion at (300, 500)
+        sword.Draw(600, 400);       // Draw sword at (600, 400)
 
         FsSwapBuffers();
         FsSleep(10);
-        player.KeepPlaying();
     }
 
     player.End();
     return 0;
 }
+
+/*
+void Pickup() {
+    state = ONPLAYER;
+}
+
+bool IsCollidingWith(const MovingCircle& player) const {
+    int dx = x - player.x;
+    int dy = y - player.y;
+    return (dx * dx + dy * dy) <= (player.radius * player.radius);
+}
+*/
