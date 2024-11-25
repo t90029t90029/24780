@@ -1,18 +1,3 @@
-#ifndef ITEM_MANAGE_H
-#define ITEM_MANAGE_H
-#endif 
-//move this to the header file
-/*
-#include <stdio.h>
-#include <iostream>
-#include <vector>
-#include "fssimplewindow.h"
-#include "yssimplesound.h"
-#include "yspng.h"
-#include <math.h>
-#include "Tile.h"
-*/
-
 #include "itemManage.h"
 class Item {
 public:
@@ -89,13 +74,31 @@ public:
     }
 };
 
+Item SpawnItem(const std::string& name) {
+    if (name == "Gun") {
+        return Item("Gun", 3, 50, 0, "gun.png", "gun.wav");
+    }
+    else if (name == "Sword") {
+        return Item("Sword", 1, 25, 0, "sword.png", "sword.wav");
+    }
+    else if (name == "Health Potion") {
+        return Item("Health Potion", 0, 0, 25, "hp.png", "hp.wav");
+    }
+
+    // If no item matches, return a default item or throw an exception
+    std::cerr << "No item found with name: " << name << std::endl;
+    return Item("Unknown", 0, 0, 0, "default.png", "default.wav");  // Default item
+}
 
 
 
+
+
+/*
 
 //main function just for testing
 int main() {
-    FsOpenWindow(0, 0, 800, 600, 1, "Item Drawing Example");
+    FsOpenWindow(0, 0, 800, 600, 1, "TEST");
 
     // Enable blending for transparency
     glEnable(GL_BLEND);
@@ -107,13 +110,12 @@ int main() {
     player.Start();
 
     // Create Item objects //instead of default constructor, spawn item 
-    Item gun("Gun", 3, 50, 0, "gun.png", "gun.wav");
-    Item sword("Sword", 1, 25, 0, "sword.png", "sword.wav");
-    Item healthPotion("Health Potion", 0, 0, 25, "hp.png", "hp.wav");
+    Item gun = SpawnItem("Gun");
+    Item sword = SpawnItem("Sword");
+    Item healthPotion = SpawnItem("Health Potion");
 
     // Hero's currently held item (just for testing)
     Item& itemHold = gun; 
-    //hero item
 
     bool terminate = false;
 
@@ -145,24 +147,4 @@ int main() {
     player.End();
     return 0;
 }
-
-/*
-void Pickup() {
-    state = ONPLAYER;
-}
-
-bool IsCollidingWith(const MovingCircle& player) const {
-    int dx = x - player.x;
-    int dy = y - player.y;
-    return (dx * dx + dy * dy) <= (player.radius * player.radius);
-}
 */
-
-// use this.item.triggereffect  this.name
-
-//int TriggerEffect(this.name, YsSoundPlayer& player) {\
-
-
-//this.item.getRange()
-
-//this.item is Item gun("Gun", 3, 50, 0, "gun.png", "gun.wav");
