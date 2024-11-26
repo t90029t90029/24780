@@ -17,7 +17,7 @@ bool Map::LoadFromFile(const std::string &filename)
         for (int col = 0; col < MAP_COLS; ++col)
         {
             int tileType;
-            if (!(file >> tileType) || tileType < 0 || tileType > 5)
+            if (!(file >> tileType) || tileType < 0 || tileType > 7)
             {
                 std::cerr << "Error: Invalid map data at row " << row << ", col " << col << std::endl;
                 return false;
@@ -34,6 +34,10 @@ bool Map::LoadFromFile(const std::string &filename)
             {
                 doorRow = row;
                 doorCol = col;
+            }
+            else if (tileType == ENEMY)
+            {
+                enemyCount++;
             }
         }
     }
@@ -105,6 +109,11 @@ void Map::SpawnPlayer(int x, int y)
 Item Map::GetItem(int x, int y)
 {
     return tiles[y][x].GetItem();
+}
+
+int Map::GetEnemyCount() const
+{
+    return enemyCount;
 }
 
 //
