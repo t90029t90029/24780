@@ -45,14 +45,10 @@ void Tile::Draw() const
             break;
         }
         case PLAYER:
-            // player.Draw(), but I'm not sure which direction or what values to pass in here
-            glColor3ub(0, 255, 0); // Green for player
-            // ToDo: Replace with Player character
+            hero.Draw();
             break;
         case ENEMY:
-            // enemy.Draw(), but I'm not sure which direction or what values to pass in here
-            glColor3ub(255, 0, 0); // Red for enemy
-            // ToDo: Replace with Enemy character
+            rabbit.Draw();
             break;
         case GUN:
             gun.Draw(x, y);
@@ -65,6 +61,7 @@ void Tile::Draw() const
             break;
         case DOOR:
         {
+            // Don't remove the braces here - needed for png decode execution in switch/case statement
             YsRawPngDecoder png;
             png.Decode("DOOR.png");
             png.Flip();
@@ -75,24 +72,20 @@ void Tile::Draw() const
         }
         default:
             glColor3ub(255, 255, 255); // White for empty tiles
+            glBegin(GL_QUADS);
+            glVertex2i(x, y);
+            glVertex2i(x + TILE_SIZE, y);
+            glVertex2i(x + TILE_SIZE, y + TILE_SIZE);
+            glVertex2i(x, y + TILE_SIZE);
+            glEnd();
+
+            glColor3ub(200, 200, 200);
+            glBegin(GL_LINE_LOOP); // Draw border
+            glVertex2i(x + 1, y + 1);
+            glVertex2i(x + TILE_SIZE - 1, y + 1);
+            glVertex2i(x + TILE_SIZE - 1, y + TILE_SIZE - 1);
+            glVertex2i(x + 1, y + TILE_SIZE - 1);
+            glEnd();
             break;
-    }
-
-    if (type == PLAYER || type == ENEMY)
-    {
-        glBegin(GL_QUADS);
-        glVertex2i(x, y);
-        glVertex2i(x + TILE_SIZE, y);
-        glVertex2i(x + TILE_SIZE, y + TILE_SIZE);
-        glVertex2i(x, y + TILE_SIZE);
-        glEnd();
-
-        glColor3ub(200, 200, 200);
-        glBegin(GL_LINE_LOOP); // Draw border
-        glVertex2i(x + 1, y + 1);
-        glVertex2i(x + TILE_SIZE - 1, y + 1);
-        glVertex2i(x + TILE_SIZE - 1, y + TILE_SIZE - 1);
-        glVertex2i(x + 1, y + TILE_SIZE - 1);
-        glEnd();
     }
 }
