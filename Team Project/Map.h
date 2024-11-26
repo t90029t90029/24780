@@ -21,6 +21,7 @@ private:
     // TODO: (This will be removed when integrating with player class)
     int playerRow, playerCol;       // Player's position
     int doorRow, doorCol;           // Door's position (the target of the map)
+    int enemyCount = 0;             // Number of enemies for GetEnemyCount function
 
 public:
     // Constructor
@@ -51,6 +52,8 @@ public:
 
     // Return the Item at Tile (x, y)
     Item GetItem(int x, int y);
+
+    int GetEnemyCount() const;
 };
 
 #endif
