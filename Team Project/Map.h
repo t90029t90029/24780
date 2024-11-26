@@ -5,6 +5,9 @@
 #include <fstream>
 #include "fssimplewindow.h"
 #include "Tile.h"
+#include "itemManage.h"
+#include "Hero.h"
+#include "Enemy.h"
 
 // Constants for map dimensions
 const int MAP_ROWS = 20;
@@ -42,6 +45,12 @@ public:
     // Get the player's current position
     int GetPlayerRow() const;
     int GetPlayerCol() const;
+
+    // Spawn the Player at Tile (x, y)
+    void SpawnPlayer(int x, int y);
+
+    // Return the Item at Tile (x, y)
+    Item GetItem(int x, int y);
 };
 
 #endif
