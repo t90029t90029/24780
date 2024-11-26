@@ -3,6 +3,8 @@
 
 #include "fssimplewindow.h"
 #include "itemManage.h"
+#include "Enemy.h"
+#include "Hero.h"
 #include "yspng.h"
 
 // Loading items for GetItem function
