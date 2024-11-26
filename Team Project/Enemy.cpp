@@ -2,6 +2,10 @@
 //
 #include "Enemy.h"
 #include "Map.h"
+#include "itemManage.h"
+#include <cmath>
+#include <math.h>
+#include <time.h>
 
 
 Enemy::Enemy()
@@ -13,6 +17,77 @@ Enemy::Enemy()
     attackDamage = 1;
     following = false;
     gameTime = 0;
+    speed = rand() % 50 + 50;
+
+    FsChangeToProgramDir();
+
+    YsRawPngDecoder rabbitFrontPNG;
+    YsRawPngDecoder rabbitBackPNG;
+    YsRawPngDecoder rabbitLeftPNG;
+    YsRawPngDecoder rabbitRightPNG;
+
+    if (YSOK == rabbitFrontPNG.Decode("rabbitFront.png"))
+    {
+        printf("Wid %d Hei %d\n", rabbitFrontPNG.wid, rabbitFrontPNG.hei);
+    }
+    else
+    {
+        printf("Failed to open file.\n");
+    }
+    rabbitFrontPNG.Flip();
+
+
+
+    if (YSOK == rabbitBackPNG.Decode("rabbitBack.png"))
+    {
+        printf("Wid %d Hei %d\n", rabbitBackPNG.wid, rabbitBackPNG.hei);
+    }
+    else
+    {
+        printf("Failed to open file.\n");
+    }
+    rabbitBackPNG.Flip();
+
+
+    if (YSOK == rabbitLeftPNG.Decode("rabbitLeft.png"))
+    {
+        printf("Wid %d Hei %d\n", rabbitLeftPNG.wid, rabbitLeftPNG.hei);
+    }
+    else
+    {
+        printf("Failed to open file.\n");
+    }
+    rabbitLeftPNG.Flip();
+
+    if (YSOK == rabbitRightPNG.Decode("rabbitRight.png"))
+    {
+        printf("Wid %d Hei %d\n", rabbitRightPNG.wid, rabbitRightPNG.hei);
+    }
+    else
+    {
+        printf("Failed to open file.\n");
+    }
+    rabbitRightPNG.Flip();
+
+    for (int i = 0; i < 6400; i++)
+    {
+        front[i] = rabbitFrontPNG.rgba[i];
+        right[i] = rabbitRightPNG.rgba[i];
+        left[i] = rabbitLeftPNG.rgba[i];
+        back[i] = rabbitBackPNG.rgba[i];
+    }
+
+
+}
+
+int Enemy::GetEnemyRow()
+{
+    return tileX;
+}
+
+int Enemy::GetEnemyCol()
+{
+    return tileY;
 }
 
 void Enemy::SpawnEnemy(int x, int y)
@@ -21,11 +96,11 @@ void Enemy::SpawnEnemy(int x, int y)
     tileY = y;
 }
 
-void Enemy::IsFollowing(int playertileX, int playertileY)
+void Enemy::CheckFollowing(int playerX, int playerY)
 {
     if (following == false)
     {
-        if ((abs(playertileX - tileX) == 1 || abs(playertileX - tileX) == 0) && ((abs(playertileY - tileY) == 1 || abs(playertileY - tileY) == 0)))
+        if ((abs(playerX - tileX) == 1 || abs(playerX - tileX) == 0) && ((abs(playerY - tileY) == 1 || abs(playerY - tileY) == 0)))
         {
             following = true;
         }
@@ -33,7 +108,7 @@ void Enemy::IsFollowing(int playertileX, int playertileY)
     }
 }
 
-void Enemy::Draw(unsigned char front[], unsigned char right[], unsigned char left[], unsigned char back[]) const
+void Enemy::Draw() 
 {
     gameTime += 1;
     if (HP > 0)
@@ -64,16 +139,15 @@ void Enemy::Draw(unsigned char front[], unsigned char right[], unsigned char lef
 }
 
 
-void Enemy::FollowHero(int playertileX, int playertileY, Enemy rabbit[],Map map)
+void Enemy::FollowHeroIfPossible(int playerX, int playerY, Enemy rabbit[],Map map)
 {
     if (following == true)
     {
         int currTileX = tileX;
         int currTileY = tileY;
-        printf("here");
-        if (tileX - playertileX > 0)
+        if (tileX - playerX > 0)
         {
-            if (playergameTime % speed == 0)
+            if (gameTime % speed == 0)
             {
                 if (map.IsAccessible(tileX - 1, tileY) == false)
                 {
@@ -82,16 +156,16 @@ void Enemy::FollowHero(int playertileX, int playertileY, Enemy rabbit[],Map map)
                 tileX -= 1;
                 direction = 1;
 
-                if (playertileX == tileX)
+                if (playerX == tileX)
                 {
                     tileX += 1;
                 }
             }
 
         }
-        else if (tileX - playertileX < 0)
+        else if (tileX - playerX < 0)
         {
-            if (playergameTime % speed == 0)
+            if (gameTime % speed == 0)
             {
                 if (map.IsAccessible(tileX + 1, tileY) == false)
                 {
@@ -99,7 +173,7 @@ void Enemy::FollowHero(int playertileX, int playertileY, Enemy rabbit[],Map map)
                 }
                 tileX += 1;
                 direction = 2;
-                if (playertileX == tileX)
+                if (playerX == tileX)
                 {
                     tileX -= 1;
                 }
@@ -107,9 +181,9 @@ void Enemy::FollowHero(int playertileX, int playertileY, Enemy rabbit[],Map map)
 
         }
 
-        if (tileY - playertileY > 0)
+        if (tileY - playerY > 0)
         {
-            if (playergameTime % speed == 0)
+            if (gameTime % speed == 0)
             {
                 if (map.IsAccessible(tileX, tileY - 1) == false)
                 {
@@ -117,16 +191,16 @@ void Enemy::FollowHero(int playertileX, int playertileY, Enemy rabbit[],Map map)
                 }
                 tileY -= 1;
                 direction = 3;
-                if (playertileY == tileY)
+                if (playerY == tileY)
                 {
                     tileY += 1;
                 }
             }
 
         }
-        else if (tileY - playertileY < 0)
+        else if (tileY - playerY < 0)
         {
-            if (playergameTime % speed == 0)
+            if (gameTime % speed == 0)
             {
                 if (map.IsAccessible(tileX, tileY + 1) == false)
                 {
@@ -134,7 +208,7 @@ void Enemy::FollowHero(int playertileX, int playertileY, Enemy rabbit[],Map map)
                 }
                 tileY += 1;
                 direction = 0;
-                if (playertileY == tileY)
+                if (playerY == tileY)
                 {
                     tileY -= 1;
                 }
@@ -170,4 +244,3 @@ void Enemy::FollowHero(int playertileX, int playertileY, Enemy rabbit[],Map map)
 //   4. Use the Error List window to view errors
 //   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
 //   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
-

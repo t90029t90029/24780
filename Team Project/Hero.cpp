@@ -4,7 +4,7 @@
 #include "Hero.h"
 #include "Enemy.h"
 #include "Map.h"
-#include "ItemManage.h"
+#include "itemManage.h"
 
 
 Hero::Hero()
@@ -13,20 +13,99 @@ Hero::Hero()
     pixelY = 40;
     direction = 0;
     HP = 100;
-    tileX = 0;
-    tileY = 0;
+    //tileX = 0;
+    //tileY = 0;
     range = 0;
     damage = 0;
     health = 0;
+    FsChangeToProgramDir();
+    
+    YsRawPngDecoder heroFrontPNG;
+    YsRawPngDecoder heroBackPNG;
+    YsRawPngDecoder heroLeftPNG;
+    YsRawPngDecoder heroRightPNG;
+    YsRawPngDecoder rabbitFrontPNG;
+    YsRawPngDecoder rabbitBackPNG;
+    YsRawPngDecoder rabbitLeftPNG;
+    YsRawPngDecoder rabbitRightPNG;
+
+    if (YSOK == heroFrontPNG.Decode("heroFront.png"))
+    {
+        printf("Wid %d Hei %d\n", heroFrontPNG.wid, heroFrontPNG.hei);
+    }
+    else
+    {
+        printf("Failed to open hero front image.\n");
+    }
+    heroFrontPNG.Flip();
+
+
+
+    if (YSOK == heroBackPNG.Decode("heroBack.png"))
+    {
+        printf("Wid %d Hei %d\n", heroBackPNG.wid, heroBackPNG.hei);
+    }
+    else
+    {
+        printf("Failed to open hero back image.\n");
+    }
+    heroBackPNG.Flip();
+
+
+    if (YSOK == heroLeftPNG.Decode("heroLeft.png"))
+    {
+        printf("Wid %d Hei %d\n", heroLeftPNG.wid, heroLeftPNG.hei);
+    }
+    else
+    {
+        printf("Failed to open hero left image.\n");
+    }
+    heroLeftPNG.Flip();
+
+    if (YSOK == heroRightPNG.Decode("heroRight.png"))
+    {
+        printf("Wid %d Hei %d\n", heroRightPNG.wid, heroRightPNG.hei);
+    }
+    else
+    {
+        printf("Failed to open hero right image.\n");
+    }
+    heroRightPNG.Flip();
+
+    for (int i = 0; i < 6400; i++)
+    {
+        front[i] = heroFrontPNG.rgba[i];
+        right[i] = heroRightPNG.rgba[i];
+        left[i] = heroLeftPNG.rgba[i];
+        back[i] = heroBackPNG.rgba[i];
+    }
+
 }
 
-void Hero::PickItemIfAny(Item item)
+
+bool Hero::IsDead()
 {
-    range = item.range;
-    damage = item.damage;
-    health = item.health;
+    if (HP <= 0)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
+void Hero::PickItemIfAny(Map map)
+{
+    return;
+    Item curr = map.GetItem(tileX, tileY);
+    range = curr.getRange();
+    damage = curr.getDamage();
+    health = curr.getHeal();
 
 }
+
 
 
 
@@ -60,7 +139,7 @@ void Hero::Attack(Enemy rabbit[])
     {
         for (int i = 0; i < rabbits; i++)
         {
-            if ((rabbit[i].tileX == tileX) && (rabbit[i].tileY >= tileY - range) && (rabbit[i].tileY < tileY))
+            if ((rabbit[i].GetEnemyRow() == tileX) && (rabbit[i].GetEnemyCol() >= tileY - range) && (rabbit[i].GetEnemyCol() < tileY))
             {
                 rabbit[i].HP -= damage;
             }
@@ -70,7 +149,7 @@ void Hero::Attack(Enemy rabbit[])
     {
         for (int i = 0; i < rabbits; i++)
         {
-            if ((rabbit[i].tileX <= tileX + range) && (rabbit[i].tileX > tileX) && (rabbit[i].tileY == tileY))
+            if ((rabbit[i].GetEnemyRow() <= tileX + range) && (rabbit[i].GetEnemyRow() > tileX) && (rabbit[i].GetEnemyCol() == tileY))
             {
                 rabbit[i].HP -= damage;
             }
@@ -80,7 +159,7 @@ void Hero::Attack(Enemy rabbit[])
     {
         for (int i = 0; i < rabbits; i++)
         {
-            if ((rabbit[i].tileX >= tileX - range) && (rabbit[i].tileX < tileX) && (rabbit[i].tileY == tileY))
+            if ((rabbit[i].GetEnemyRow() >= tileX - range) && (rabbit[i].GetEnemyRow() < tileX) && (rabbit[i].GetEnemyCol() == tileY))
             {
                 rabbit[i].HP -= damage;
             }
@@ -90,7 +169,7 @@ void Hero::Attack(Enemy rabbit[])
     {
         for (int i = 0; i < rabbits; i++)
         {
-            if ((rabbit[i].tileX == tileX) && (rabbit[i].tileY <= tileY + range) && (rabbit[i].tileY > tileY))
+            if ((rabbit[i].GetEnemyRow() == tileX) && (rabbit[i].GetEnemyCol() <= tileY + range) && (rabbit[i].GetEnemyCol() > tileY))
             {
                 rabbit[i].HP -= damage;
             }
@@ -98,7 +177,7 @@ void Hero::Attack(Enemy rabbit[])
     }
 }
 
-void Hero::Draw(const unsigned char front[], const unsigned char right[], const unsigned char left[], const unsigned char back[]) const
+void Hero::Draw() const
 {
     //gameTime += 1;
     if (HP > 0)
@@ -146,7 +225,7 @@ void Hero::Move(int key, Enemy rabbit[], Map map)
             int count = 0;
             for (int i = 0; i < 10; i++)
             {
-                if (currTile + 1 == rabbit[i].tileX && tileY == rabbit[i].tileY)
+                if (currTile + 1 == rabbit[i].GetEnemyRow() && tileY == rabbit[i].GetEnemyCol())
                 {
                     count += 1;
                 }
@@ -172,7 +251,7 @@ void Hero::Move(int key, Enemy rabbit[], Map map)
             int currTile = tileX;
             for (int i = 0; i < 10; i++)
             {
-                if (currTile - 1 == rabbit[i].tileX && tileY == rabbit[i].tileY)
+                if (currTile - 1 == rabbit[i].GetEnemyRow() && tileY == rabbit[i].GetEnemyCol())
                 {
                     count += 1;
                 }
@@ -197,7 +276,7 @@ void Hero::Move(int key, Enemy rabbit[], Map map)
             int currTile = tileY;
             for (int i = 0; i < 10; i++)
             {
-                if (tileX == rabbit[i].tileX && currTile - 1 == rabbit[i].tileY)
+                if (tileX == rabbit[i].GetEnemyRow() && currTile - 1 == rabbit[i].GetEnemyCol())
                 {
                     count += 1;
 
@@ -223,7 +302,7 @@ void Hero::Move(int key, Enemy rabbit[], Map map)
             int currTile = tileY;
             for (int i = 0; i < 10; i++)
             {
-                if (tileX == rabbit[i].tileX && currTile + 1 == rabbit[i].tileY)
+                if (tileX == rabbit[i].GetEnemyRow() && currTile + 1 == rabbit[i].GetEnemyCol())
                 {
                     count += 1;
                     tileY -= 1;
@@ -238,7 +317,7 @@ void Hero::Move(int key, Enemy rabbit[], Map map)
 
     for (int i = 0; i < rabbits; i++)
     {
-        if ((rabbit[i].tileX + 1 == tileX || rabbit[i].tileX - 1 == tileX) && (rabbit[i].tileX - 1 == tileY || rabbit[i].tileY + 1 == tileY))
+        if ((rabbit[i].GetEnemyRow() + 1 == tileX || rabbit[i].GetEnemyRow() - 1 == tileX) && (rabbit[i].GetEnemyCol() - 1 == tileY || rabbit[i].GetEnemyCol() + 1 == tileY))
         {
             HP -= 5;
         }
@@ -256,4 +335,4 @@ void Hero::Move(int key, Enemy rabbit[], Map map)
 //   3. Use the Output window to see build output and other messages
 //   4. Use the Error List window to view errors
 //   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to op
+//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
