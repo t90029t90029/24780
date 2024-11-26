@@ -1,6 +1,7 @@
 // Enemy.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 #include "Enemy.h"
+#include "Map.h"
 
 
 Enemy::Enemy()
@@ -11,8 +12,14 @@ Enemy::Enemy()
     HP = 100;
     attackDamage = 1;
     following = false;
+    gameTime = 0;
 }
 
+void Enemy::SpawnEnemy(int x, int y)
+{
+    tileX = x;
+    tileY = y;
+}
 
 void Enemy::IsFollowing(int playertileX, int playertileY)
 {
@@ -20,7 +27,6 @@ void Enemy::IsFollowing(int playertileX, int playertileY)
     {
         if ((abs(playertileX - tileX) == 1 || abs(playertileX - tileX) == 0) && ((abs(playertileY - tileY) == 1 || abs(playertileY - tileY) == 0)))
         {
-            printf("dsljfs");
             following = true;
         }
 
@@ -29,6 +35,7 @@ void Enemy::IsFollowing(int playertileX, int playertileY)
 
 void Enemy::Draw(unsigned char front[], unsigned char right[], unsigned char left[], unsigned char back[]) const
 {
+    gameTime += 1;
     if (HP > 0)
     {
         glRasterPos2i(0 + tileX * 40, pixelY - 1 + tileY * 40);
@@ -57,7 +64,7 @@ void Enemy::Draw(unsigned char front[], unsigned char right[], unsigned char lef
 }
 
 
-void Enemy::FollowHero(int playertileX, int playertileY, int playergameTime,Enemy rabbit[])
+void Enemy::FollowHero(int playertileX, int playertileY, Enemy rabbit[],Map map)
 {
     if (following == true)
     {
@@ -68,6 +75,10 @@ void Enemy::FollowHero(int playertileX, int playertileY, int playergameTime,Enem
         {
             if (playergameTime % speed == 0)
             {
+                if (map.IsAccessible(tileX - 1, tileY) == false)
+                {
+                    return;
+                }
                 tileX -= 1;
                 direction = 1;
 
@@ -82,6 +93,10 @@ void Enemy::FollowHero(int playertileX, int playertileY, int playergameTime,Enem
         {
             if (playergameTime % speed == 0)
             {
+                if (map.IsAccessible(tileX + 1, tileY) == false)
+                {
+                    return;
+                }
                 tileX += 1;
                 direction = 2;
                 if (playertileX == tileX)
@@ -96,6 +111,10 @@ void Enemy::FollowHero(int playertileX, int playertileY, int playergameTime,Enem
         {
             if (playergameTime % speed == 0)
             {
+                if (map.IsAccessible(tileX, tileY - 1) == false)
+                {
+                    return;
+                }
                 tileY -= 1;
                 direction = 3;
                 if (playertileY == tileY)
@@ -109,6 +128,10 @@ void Enemy::FollowHero(int playertileX, int playertileY, int playergameTime,Enem
         {
             if (playergameTime % speed == 0)
             {
+                if (map.IsAccessible(tileX, tileY + 1) == false)
+                {
+                    return;
+                }
                 tileY += 1;
                 direction = 0;
                 if (playertileY == tileY)
@@ -147,3 +170,4 @@ void Enemy::FollowHero(int playertileX, int playertileY, int playergameTime,Enem
 //   4. Use the Error List window to view errors
 //   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
 //   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
+
