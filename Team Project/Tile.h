@@ -9,6 +9,8 @@
 Item gun("Gun", 1, "gun.png", "gun.wav");
 Item healthPotion("Health Potion", 2, "hp.png", "hp.wav");
 Item sword("Sword", 3, "sword.png", "sword.wav");
+Hero hero();
+Enemy rabbit();
 
 // Constants for tile size
 const int TILE_SIZE = 40;
