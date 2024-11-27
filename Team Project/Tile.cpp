@@ -1,91 +1,91 @@
 #include "Tile.h"
-#include "itemManage.h"
 
-// Tile Implementation
-Tile::Tile(int x, int y, TileType type) : x(x), y(y), type(type) {}
-//Tile::Tile(int x, int y, TileType type, Item item) : x(x), y(y), type(type), item(item) {}
+Tile::Tile(int x, int y, TileType baseType)
+    : x(x), y(y), baseType(baseType), hero(nullptr), enemy(nullptr), item(nullptr) {}
 
-void Tile::SetType(TileType newType)
+void Tile::SetBaseType(TileType type)
 {
-    type = newType;
+    baseType = type;
 }
 
-TileType Tile::GetType() const
+TileType Tile::GetBaseType() const
 {
-    return type;
+    return baseType;
 }
 
-Item Tile::GetItem(void)
+void Tile::SetHero(Hero* heroPtr)
 {
-    switch(type)
-    {
-    case GUN:
-        return gun;
-    case HP:
-        return healthPotion;
-    case SWORD:
-        return sword;
-    default:
-        return;
-    }
+    hero = heroPtr;
+}
+
+Hero* Tile::GetHero() const
+{
+    return hero;
+}
+
+void Tile::SetEnemy(Enemy* enemyPtr)
+{
+    enemy = enemyPtr;
+}
+
+Enemy* Tile::GetEnemy() const
+{
+    return enemy;
+}
+
+void Tile::SetItem(Item* itemPtr)
+{
+    item = itemPtr;
+}
+
+Item* Tile::GetItem() const
+{
+    return item;
+}
+
+bool Tile::IsOccupied() const
+{
+    return hero != nullptr || enemy != nullptr || item != nullptr;
 }
 
 void Tile::Draw() const
 {
-    switch (type)
+    // Draw base tile
+    switch (baseType)
     {
-        // TODO: Some of the cases may be removed and replaced as a png file in the future
-        case WALL:
-        {
-            // Don't remove braces here - needed for png decode execution in switch/case statement
-            YsRawPngDecoder png;
-            png.Decode("WALL.png");
-            glRasterPos2i(x, y);
-            glDrawPixels(png.wid, png.hei, GL_RGBA, GL_UNSIGNED_BYTE, png.rgba);
-            break;
-        }
-        case PLAYER:
-            hero.Draw();
-            break;
-        case ENEMY:
-            rabbit.Draw();
-            break;
-        case GUN:
-            gun.Draw(x, y);
-            break;
-        case HP:
-            healthPotion.Draw(x, y);
-            break;
-        case SWORD:
-            sword.Draw(x, y);
-            break;
-        case DOOR:
-        {
-            // Don't remove the braces here - needed for png decode execution in switch/case statement
-            YsRawPngDecoder png;
-            png.Decode("DOOR.png");
-            png.Flip();
-            glRasterPos2i(x, y);
-            glDrawPixels(png.wid, png.hei, GL_RGBA, GL_UNSIGNED_BYTE, png.rgba);
-            /*glColor3ub(255, 215, 0);*/ // Gold for door
-            break;
-        }
-        default:
-            glColor3ub(255, 255, 255); // White for empty tiles
-            glBegin(GL_QUADS);
-            glVertex2i(x, y);
-            glVertex2i(x + TILE_SIZE, y);
-            glVertex2i(x + TILE_SIZE, y + TILE_SIZE);
-            glVertex2i(x, y + TILE_SIZE);
-            glEnd();
+    case TILE_WALL:
+        glColor3ub(0, 0, 0); // Black for walls
+        break;
+    case TILE_DOOR:
+        glColor3ub(255, 215, 0); // Gold for doors
+        break;
+    case TILE_EMPTY:
+    case TILE_HERO:
+    case TILE_ENEMY:
+    case TILE_ITEM:
+    default:
+        glColor3ub(255, 255, 255); // White for empty tiles
+        break;
+    }
 
-            glColor3ub(200, 200, 200);
-            glBegin(GL_LINE_LOOP); // Draw border
-            glVertex2i(x + 1, y + 1);
-            glVertex2i(x + TILE_SIZE - 1, y + 1);
-            glVertex2i(x + TILE_SIZE - 1, y + TILE_SIZE - 1);
-            glVertex2i(x + 1, y + TILE_SIZE - 1);
-            glEnd();
-            break;
+    glBegin(GL_QUADS);
+    glVertex2i(x, y);
+    glVertex2i(x + 40, y);
+    glVertex2i(x + 40, y + 40);
+    glVertex2i(x, y + 40);
+    glEnd();
+
+    // Draw entities on top
+    if (item)
+    {
+        item->Draw();
+    }
+    if (enemy)
+    {
+        enemy->Draw();
+    }
+    if (hero)
+    {
+        hero->Draw();
     }
 }

@@ -1,54 +1,47 @@
 #ifndef TILE_H
 #define TILE_H
 
+#include <iostream>
 #include "fssimplewindow.h"
-#include "itemManage.h"
-#include "Enemy.h"
 #include "Hero.h"
-#include "yspng.h"
+#include "Enemy.h"
+#include "Item.h"
 
-// Loading items for GetItem function
-Item gun("Gun", 1, "gun.png", "gun.wav");
-Item healthPotion("Health Potion", 2, "hp.png", "hp.wav");
-Item sword("Sword", 3, "sword.png", "sword.wav");
-Hero hero();
-Enemy rabbit();
-
-// Constants for tile size
-const int TILE_SIZE = 40;
-
-// Enumeration for different tile types
 enum TileType
 {
-    EMPTY,  // 0: Empty tile
-    WALL,   // 1: Wall
-    PLAYER, // 2: Player
-    ENEMY,  // 3: Enemy
-    GUN,    // 4: Gun
-    HP,     // 5: Health Potion
-    SWORD,  // 6: Sword
-    DOOR    // 7: Door
+    TILE_EMPTY = 0,  // Empty tile
+    TILE_WALL = 1,   // Wall
+    TILE_DOOR = 2,   // Door
+    TILE_HERO = 3,   // Hero start position
+    TILE_ENEMY = 4,  // Enemy position
+    TILE_ITEM = 5    // Item position
 };
 
-// Tile class represents a single tile on the map
 class Tile
 {
 private:
-    int x, y;         // Top-left corner position of the tile
-    TileType type;    // Type of the tile (e.g., WALL, PLAYER)
+    int x, y;           // Position of the tile on the map
+    TileType baseType;  // Base type of the tile
+    Hero* hero;         // Pointer to the hero on this tile (if any)
+    Enemy* enemy;       // Pointer to the enemy on this tile (if any)
+    Item* item;         // Pointer to the item on this tile (if any)
 
 public:
-    // Constructor
-    Tile(int x = 0, int y = 0, TileType type = EMPTY);; //std::optional<Item> item = std::nullopt);
-    // Constructor with Item
-    /*Tile(int x = 0, int y = 0, TileType type = EMPTY, Item item);*/
+    Tile(int x = 0, int y = 0, TileType baseType = TILE_EMPTY);
 
-    // Setter and getter for tile type
-    void SetType(TileType newType);
-    TileType GetType() const;
-    Item GetItem(void);
+    void SetBaseType(TileType type);
+    TileType GetBaseType() const;
 
-    // Render the tile
+    void SetHero(Hero* hero);
+    Hero* GetHero() const;
+
+    void SetEnemy(Enemy* enemy);
+    Enemy* GetEnemy() const;
+
+    void SetItem(Item* item);
+    Item* GetItem() const;
+
+    bool IsOccupied() const;
     void Draw() const;
 };
 

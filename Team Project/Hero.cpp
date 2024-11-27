@@ -1,338 +1,341 @@
-// Hero.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #include "Hero.h"
-#include "Enemy.h"
 #include "Map.h"
-#include "itemManage.h"
+#include "Tile.h"
+#include "Enemy.h"
+#include "Item.h"
+#include "fssimplewindow.h"
+#include <iostream>
 
-
-Hero::Hero()
+// Constructor
+Hero::Hero(int health, int attackRange, int damage)
+    : health(health), attackRange(attackRange), damage(damage),
+      row(0), col(0), facingDirection(DOWN)
 {
-    pixelX = 40;
-    pixelY = 40;
-    direction = 0;
-    HP = 100;
-    //tileX = 0;
-    //tileY = 0;
-    range = 0;
-    damage = 0;
-    health = 0;
-    FsChangeToProgramDir();
-    
-    YsRawPngDecoder heroFrontPNG;
-    YsRawPngDecoder heroBackPNG;
-    YsRawPngDecoder heroLeftPNG;
-    YsRawPngDecoder heroRightPNG;
-    YsRawPngDecoder rabbitFrontPNG;
-    YsRawPngDecoder rabbitBackPNG;
-    YsRawPngDecoder rabbitLeftPNG;
-    YsRawPngDecoder rabbitRightPNG;
-
-    if (YSOK == heroFrontPNG.Decode("heroFront.png"))
-    {
-        printf("Wid %d Hei %d\n", heroFrontPNG.wid, heroFrontPNG.hei);
-    }
-    else
-    {
-        printf("Failed to open hero front image.\n");
-    }
-    heroFrontPNG.Flip();
-
-
-
-    if (YSOK == heroBackPNG.Decode("heroBack.png"))
-    {
-        printf("Wid %d Hei %d\n", heroBackPNG.wid, heroBackPNG.hei);
-    }
-    else
-    {
-        printf("Failed to open hero back image.\n");
-    }
-    heroBackPNG.Flip();
-
-
-    if (YSOK == heroLeftPNG.Decode("heroLeft.png"))
-    {
-        printf("Wid %d Hei %d\n", heroLeftPNG.wid, heroLeftPNG.hei);
-    }
-    else
-    {
-        printf("Failed to open hero left image.\n");
-    }
-    heroLeftPNG.Flip();
-
-    if (YSOK == heroRightPNG.Decode("heroRight.png"))
-    {
-        printf("Wid %d Hei %d\n", heroRightPNG.wid, heroRightPNG.hei);
-    }
-    else
-    {
-        printf("Failed to open hero right image.\n");
-    }
-    heroRightPNG.Flip();
-
-    for (int i = 0; i < 6400; i++)
-    {
-        front[i] = heroFrontPNG.rgba[i];
-        right[i] = heroRightPNG.rgba[i];
-        left[i] = heroLeftPNG.rgba[i];
-        back[i] = heroBackPNG.rgba[i];
-    }
-
+    // Images will be loaded in SpawnPlayer
 }
 
-
-bool Hero::IsDead()
+// Destructor
+Hero::~Hero()
 {
-    if (HP <= 0)
+    // No dynamic memory allocation, nothing to clean up
+}
+
+// Spawning
+void Hero::SpawnPlayer(int row, int col)
+{
+    this->row = row;
+    this->col = col;
+    facingDirection = DOWN; // Default facing direction
+
+    // Load images for different directions
+    if (YSOK == heroUpImage.Decode("heroBack.png"))
     {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-
-void Hero::PickItemIfAny(Map map)
-{
-    return;
-    Item curr = map.GetItem(tileX, tileY);
-    range = curr.getRange();
-    damage = curr.getDamage();
-    health = curr.getHeal();
-
-}
-
-
-
-
-int Hero::GetPlayerRow()
-{
-    return tileX;
-}
-
-int Hero::GetPlayerCol()
-{
-    return tileY;
-}
-
-void Hero::SpawnPlayer(int x, int y)
-{
-    tileX = x;
-    tileY = y;
-}
-
-void Hero::Attack(Enemy rabbit[])
-{
-    if (health > 0)
-    {
-        if (HP <= 100 - health)
+        // Replace transparent pixels with white
+        for (int i = 0; i < heroUpImage.wid * heroUpImage.hei; ++i)
         {
-            HP += health;
-        }
-        return;
-    }
-    if (direction == 0)
-    {
-        for (int i = 0; i < rabbits; i++)
-        {
-            if ((rabbit[i].GetEnemyRow() == tileX) && (rabbit[i].GetEnemyCol() >= tileY - range) && (rabbit[i].GetEnemyCol() < tileY))
+            unsigned char *pixel = &heroUpImage.rgba[i * 4];
+            if (pixel[3] == 0) // Fully transparent pixel (alpha = 0)
             {
-                rabbit[i].HP -= damage;
+                pixel[0] = 255; // Red
+                pixel[1] = 255; // Green
+                pixel[2] = 255; // Blue
+                pixel[3] = 255; // Make it opaque
             }
         }
     }
-    else if (direction == 1)
+    heroUpImage.Flip();
+
+
+    if (YSOK == heroDownImage.Decode("heroFront.png"))
     {
-        for (int i = 0; i < rabbits; i++)
+        // Replace transparent pixels with white
+        for (int i = 0; i < heroDownImage.wid * heroDownImage.hei; ++i)
         {
-            if ((rabbit[i].GetEnemyRow() <= tileX + range) && (rabbit[i].GetEnemyRow() > tileX) && (rabbit[i].GetEnemyCol() == tileY))
+            unsigned char *pixel = &heroDownImage.rgba[i * 4];
+            if (pixel[3] == 0) // Fully transparent pixel (alpha = 0)
             {
-                rabbit[i].HP -= damage;
+                pixel[0] = 255; // Red
+                pixel[1] = 255; // Green
+                pixel[2] = 255; // Blue
+                pixel[3] = 255; // Make it opaque
             }
         }
     }
-    else if (direction == 2)
+    heroDownImage.Flip();
+
+    if (YSOK == heroLeftImage.Decode("heroLeft.png"))
     {
-        for (int i = 0; i < rabbits; i++)
+        // Replace transparent pixels with white
+        for (int i = 0; i < heroLeftImage.wid * heroLeftImage.hei; ++i)
         {
-            if ((rabbit[i].GetEnemyRow() >= tileX - range) && (rabbit[i].GetEnemyRow() < tileX) && (rabbit[i].GetEnemyCol() == tileY))
+            unsigned char *pixel = &heroLeftImage.rgba[i * 4];
+            if (pixel[3] == 0) // Fully transparent pixel (alpha = 0)
             {
-                rabbit[i].HP -= damage;
+                pixel[0] = 255; // Red
+                pixel[1] = 255; // Green
+                pixel[2] = 255; // Blue
+                pixel[3] = 255; // Make it opaque
             }
         }
     }
-    else if (direction == 3)
+    heroLeftImage.Flip();
+
+    if (YSOK == heroRightImage.Decode("heroRight.png"))
     {
-        for (int i = 0; i < rabbits; i++)
+        // Replace transparent pixels with white
+        for (int i = 0; i < heroRightImage.wid * heroRightImage.hei; ++i)
         {
-            if ((rabbit[i].GetEnemyRow() == tileX) && (rabbit[i].GetEnemyCol() <= tileY + range) && (rabbit[i].GetEnemyCol() > tileY))
+            unsigned char *pixel = &heroRightImage.rgba[i * 4];
+            if (pixel[3] == 0) // Fully transparent pixel (alpha = 0)
             {
-                rabbit[i].HP -= damage;
+                pixel[0] = 255; // Red
+                pixel[1] = 255; // Green
+                pixel[2] = 255; // Blue
+                pixel[3] = 255; // Make it opaque
             }
         }
     }
+    heroRightImage.Flip();
+
+    std::cout << "Hero spawned at position: (" << row << ", " << col << ")" << std::endl;
 }
 
+// Drawing
 void Hero::Draw() const
 {
-    //gameTime += 1;
-    if (HP > 0)
+    int x = col * 40;
+    int y = (row + 1) * 40; // Adjusted y-coordinate to align with items
+
+    const YsRawPngDecoder *currentImage;
+
+    switch (facingDirection)
     {
-        glRasterPos2i(0 + tileX * 40, pixelY - 1 + tileY * 40);
-        if (direction == 0)
-        {
-            glDrawPixels(pixelX, pixelY, GL_RGBA, GL_UNSIGNED_BYTE, front);
-        }
-        else if (direction == 1)
-        {
-            glDrawPixels(pixelX, pixelY, GL_RGBA, GL_UNSIGNED_BYTE, right);
-        }
-        else if (direction == 2)
-        {
-            glDrawPixels(pixelX, pixelY, GL_RGBA, GL_UNSIGNED_BYTE, left);
-        }
-        else if (direction == 3)
-        {
-            glDrawPixels(pixelX, pixelY, GL_RGBA, GL_UNSIGNED_BYTE, back);
-        }
-        glColor3f(1, 0, 0);
-        glBegin(GL_LINES);
-        glVertex2f(tileX * 40, tileY * 40);
-        glVertex2f(tileX * 40 + 40 * (HP / 100), tileY * 40);
-        glEnd();
+    case UP:
+        currentImage = &heroUpImage;
+        break;
+    case DOWN:
+        currentImage = &heroDownImage;
+        break;
+    case LEFT:
+        currentImage = &heroLeftImage;
+        break;
+    case RIGHT:
+        currentImage = &heroRightImage;
+        break;
+    default:
+        break;
     }
- 
-    
+
+    if (currentImage != nullptr && currentImage->rgba != nullptr)
+    {
+        // Set raster position at the top-left corner of the tile
+        glRasterPos2i(x, y);
+
+        // Check if raster position is valid
+        int rasterPosValid;
+        glGetIntegerv(GL_CURRENT_RASTER_POSITION_VALID, &rasterPosValid);
+        if (!rasterPosValid)
+        {
+            std::cerr << "Invalid raster position at (" << x << ", " << y << ")" << std::endl;
+            return;
+        }
+
+        // Scale the image to fit the block size (40x40 pixels)
+        glPixelZoom(40.0f / currentImage->wid, 40.0f / currentImage->hei); // Positive Y scaling
+
+        // Render the PNG image
+        glDrawPixels(currentImage->wid, currentImage->hei, GL_RGBA, GL_UNSIGNED_BYTE, currentImage->rgba);
+
+        // Reset pixel zoom to normal
+        glPixelZoom(1.0f, 1.0f);
+    }
 }
 
-void Hero::Move(int key, Enemy rabbit[], Map map)
+// Movement methods with debug output
+void Hero::MoveUp(Map &map)
 {
-    if (key == FSKEY_RIGHT)
-    {
-        if (map.IsAccessible(tileX + 1, tileY) == false)
-        {
-            return;
-        }
-        direction = 1;
-        
-        if (tileX != 19)
-        {
-            int currTile = tileX;
-            int count = 0;
-            for (int i = 0; i < 10; i++)
-            {
-                if (currTile + 1 == rabbit[i].GetEnemyRow() && tileY == rabbit[i].GetEnemyCol())
-                {
-                    count += 1;
-                }
-            }
+    map.GetTile(row, col)->SetBaseType(TILE_EMPTY);
+    facingDirection = UP;
+    MoveTo(row - 1, col, map);
+}
 
-            if (count == 0)
-            {
-                tileX += 1;
-            }
-        }
-        
-    }
-    else if (key == FSKEY_LEFT)
+void Hero::MoveDown(Map &map)
+{
+    map.GetTile(row, col)->SetBaseType(TILE_EMPTY);
+    facingDirection = DOWN;
+    MoveTo(row + 1, col, map);
+}
+
+void Hero::MoveLeft(Map &map)
+{
+    map.GetTile(row, col)->SetBaseType(TILE_EMPTY);
+    facingDirection = LEFT;
+    MoveTo(row, col - 1, map);
+}
+
+void Hero::MoveRight(Map &map)
+{
+    map.GetTile(row, col)->SetBaseType(TILE_EMPTY);
+    facingDirection = RIGHT;
+    MoveTo(row, col + 1, map);
+}
+
+void Hero::MoveTo(int newRow, int newCol, Map &map)
+{
+    if (!map.IsAccessible(newRow, newCol))
+        return;
+
+    // Move hero
+    // Clear the previous tile
+    map.SetHero(row, col, nullptr);
+    map.GetTile(row, col)->SetBaseType(TILE_EMPTY);
+
+    // Update hero's position
+    row = newRow;
+    col = newCol;
+
+    // Set the new tile
+    map.SetHero(row, col, this);
+    map.GetTile(row, col)->SetBaseType(TILE_HERO);
+
+    // Check for item
+    Item *item = map.GetItem(row, col);
+    if (item != nullptr)
     {
-        if (map.IsAccessible(tileX - 1, tileY) == false)
-        {
-            return;
-        }
-        direction = 2;
-        if (tileX != 0)
-        {
-            int count = 0;
-            int currTile = tileX;
-            for (int i = 0; i < 10; i++)
-            {
-                if (currTile - 1 == rabbit[i].GetEnemyRow() && tileY == rabbit[i].GetEnemyCol())
-                {
-                    count += 1;
-                }
-            }
-            if (count == 0)
-            {
-                tileX -= 1;
-            }
+        // Pick up item
+        std::cout << "Picked up item: " << item->GetName() << std::endl;
+
+        // Update hero's attributes based on the item
+        if (item->GetName().compare("Health Potion") == 0) {
+            health += item->GetHeal();
+            if (health > 100)
+                health = 100; // Cap health at 100
+            std::cout << "New HP: " << health << std::endl;
+        } else {
+            attackRange = item->GetRange();
+            damage = item->GetDamage();
         }
 
+        map.SetItem(row, col, nullptr);
+        delete item; // Clean up
     }
-    else if (key == FSKEY_UP)
-    {
-        if (map.IsAccessible(tileX, tileY - 1) == false)
-        {
-            return;
-        }
-        direction = 3;
-        if (tileY != 0)
-        {
-            int count = 0;
-            int currTile = tileY;
-            for (int i = 0; i < 10; i++)
-            {
-                if (tileX == rabbit[i].GetEnemyRow() && currTile - 1 == rabbit[i].GetEnemyCol())
-                {
-                    count += 1;
+}
 
-                }
-            }
-            if (count == 0)
-            {
-                tileY -= 1;
-            }
-
-        }
-    }
-    else if (key == FSKEY_DOWN)
+// Combat
+void Hero::Attack(Map &map)
+{
+    for (int range = 1; range <= attackRange; ++range)
     {
-        if (map.IsAccessible(tileX, tileY + 1) == false)
+        int targetRow = row;
+        int targetCol = col;
+
+        // Determine the target tile based on facing direction and range
+        switch (facingDirection)
         {
-            return;
+        case UP:
+            targetRow -= range;
+            break;
+        case DOWN:
+            targetRow += range;
+            break;
+        case LEFT:
+            targetCol -= range;
+            break;
+        case RIGHT:
+            targetCol += range;
+            break;
+        default:
+            break;
         }
-        direction = 0;
-        if (tileY != 19)
+
+        // Ensure target coordinates are within map bounds
+        if (targetRow < 0 || targetRow >= MAP_ROWS || targetCol < 0 || targetCol >= MAP_COLS)
         {
-            int count = 0;
-            int currTile = tileY;
-            for (int i = 0; i < 10; i++)
-            {
-                if (tileX == rabbit[i].GetEnemyRow() && currTile + 1 == rabbit[i].GetEnemyCol())
-                {
-                    count += 1;
-                    tileY -= 1;
-                }
-            }
-            if (count == 0)
-            {
-                tileY += 1;
-            }
+            std::cout << "Attack went out of bounds." << std::endl;
+            break; // Stop checking further tiles if out of bounds
         }
+
+        // Attempt to attack the enemy on the target tile
+        Enemy *enemy = map.GetEnemy(targetRow, targetCol);
+        if (enemy != nullptr)
+        {
+            enemy->TakeDamage(damage);
+            std::cout << "Attacked enemy at (" << targetRow << ", " << targetCol << "). Enemy health: " << enemy->GetHealth() << std::endl;
+            if (!enemy->IsAlive())
+            {
+                std::cout << "Enemy defeated!" << std::endl;
+                map.SetEnemy(targetRow, targetCol, nullptr);
+                delete enemy; // Clean up
+                map.GetTile(targetRow, targetCol)->SetBaseType(TILE_EMPTY); // To allow the hero to walk through
+            }
+            return; // Stop attacking after hitting an enemy
+        }
+
+        // If no enemy was found on this tile, continue checking the next tile
     }
 
-    for (int i = 0; i < rabbits; i++)
-    {
-        if ((rabbit[i].GetEnemyRow() + 1 == tileX || rabbit[i].GetEnemyRow() - 1 == tileX) && (rabbit[i].GetEnemyCol() - 1 == tileY || rabbit[i].GetEnemyCol() + 1 == tileY))
-        {
-            HP -= 5;
-        }
-    }
-       
+    std::cout << "No enemy in range to attack." << std::endl;
 }
 
 
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
+// Getters and Setters
+int Hero::GetHealth() const
+{
+    return health;
+}
 
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
+void Hero::SetHealth(int health)
+{
+    this->health = health;
+}
+
+int Hero::GetAttackRange() const
+{
+    return attackRange;
+}
+
+void Hero::SetAttackRange(int range)
+{
+    attackRange = range;
+}
+
+int Hero::GetDamage() const
+{
+    return damage;
+}
+
+void Hero::SetDamage(int damage)
+{
+    this->damage = damage;
+}
+
+int Hero::GetRow() const
+{
+    return row;
+}
+
+int Hero::GetCol() const
+{
+    return col;
+}
+
+void Hero::SetPosition(int row, int col)
+{
+    this->row = row;
+    this->col = col;
+}
+
+// Health status
+void Hero::TakeDamage(int amount)
+{
+    health -= amount;
+    if (health < 0)
+    {
+        health = 0;
+    }
+}
+
+bool Hero::IsAlive() const
+{
+    return health > 0;
+}

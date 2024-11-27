@@ -1,72 +1,104 @@
-//  GameManager.cpp
-#include "fssimplewindow.h"
-#include "yssimplesound.h"
-#include "yspng.h"
-#include "common.h"
 #include "Map.h"
+#include "Hero.h"
+#include "fssimplewindow.h"
+#include <cstdlib>
+#include <ctime>
+#include <iostream>
 
-using namespace std;
-
-const int windowWidth = 800;
-const int windowHeight = 800;
-
-int main(void)
+int main()
 {
-    // Initailization
     Map map;
-    
+    Hero *hero = nullptr;
+
     FsChangeToProgramDir();
-    // Load the map
+    // Seed the random number generator
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
+
+    // Load the map from the file
     if (!map.LoadFromFile("map.txt"))
     {
+        return 0; // Exit if map loading fails
+    }
+
+    // Find the hero in the map
+    for (int row = 0; row < MAP_ROWS; ++row)
+    {
+        for (int col = 0; col < MAP_COLS; ++col)
+        {
+            Hero *h = map.GetHero(row, col);
+            if (h != nullptr)
+            {
+                hero = h;
+                break;
+            }
+        }
+        if (hero != nullptr)
+            break;
+    }
+
+    if (hero == nullptr)
+    {
+        std::cerr << "Error: Hero not found in the map." << std::endl;
         return 0;
     }
-    
-    FsOpenWindow(0, 0, windowWidth, windowHeight, 1);
-    for (;;) {
-        FsPollDevice();
 
+    // Main game loop
+    FsOpenWindow(0, 0, 800, 800, 1);
+
+    while (true)
+    {
+        FsPollDevice();
         auto key = FsInkey();
-        // Early stop if pressing ESC key
-        if(FSKEY_ESC == key)
+
+        // Exit if ESC is pressed
+        if (key == FSKEY_ESC)
         {
             break;
         }
 
-        switch(key) {
-            // Handle movement
+        // Process player input
+        switch (key)
+        {
             case FSKEY_UP:
-                map.UpdatePlayerPosition(map.GetPlayerRow() - 1, map.GetPlayerCol());
+                hero->MoveUp(map);
                 break;
             case FSKEY_DOWN:
-                map.UpdatePlayerPosition(map.GetPlayerRow() + 1, map.GetPlayerCol());
+                hero->MoveDown(map);
                 break;
             case FSKEY_LEFT:
-                map.UpdatePlayerPosition(map.GetPlayerRow(), map.GetPlayerCol() - 1);
+                hero->MoveLeft(map);
                 break;
             case FSKEY_RIGHT:
-                map.UpdatePlayerPosition(map.GetPlayerRow(), map.GetPlayerCol() + 1);
+                hero->MoveRight(map);
                 break;
-            // Handle attack
             case FSKEY_SPACE:
+                hero->Attack(map);
+                break;
+            default:
                 break;
         }
-
-        // Clear the screen before drawing
-        glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
-
-        // Draw the map
-        map.Draw();
-
-        // Check if the player is at the goal tile of the current map
-        if (map.IsGameOver()) {
-            printf("You win the game!\n");
+        
+        // Process enemy actions
+        if (map.EnemyActions()) {
+            std::cout << "Hero died! You lose!" << std::endl;
             break;
         }
 
+        // Clear screen and draw the map
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        map.Draw();
         FsSwapBuffers();
-        FsSleep(10);
+
+        // Check if the hero has reached the door
+        if (map.IsGameOver(hero->GetRow(), hero->GetCol()))
+        {
+            std::cout << "Hero reached the door! You win!" << std::endl;
+            break;
+        }
+
+        // Delay to control frame rate
+        FsSleep(50);
     }
-    
+
     return 0;
 }
