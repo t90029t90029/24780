@@ -109,7 +109,7 @@ void Hero::Draw() const
     int x = col * 40;
     int y = (row + 1) * 40; // Adjusted y-coordinate to align with items
 
-    const YsRawPngDecoder *currentImage;
+    const YsRawPngDecoder *currentImage = nullptr;
 
     switch (facingDirection)
     {
