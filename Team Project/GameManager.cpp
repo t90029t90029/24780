@@ -75,7 +75,7 @@ int main()
                 hero->MoveLeft(map, player);
                 break;
             case FSKEY_RIGHT:
-                hero->MoveRight(map, player);
+                hero->MoveRight(map, player  );
                 break;
             case FSKEY_SPACE:
                 hero->Attack(map, player);
@@ -103,7 +103,7 @@ int main()
         }
 
         // Delay to control frame rate
-        FsSleep(50);
+        FsSleep(30);
     }
 
     return 0;

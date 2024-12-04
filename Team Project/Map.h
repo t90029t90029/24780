@@ -15,6 +15,7 @@ class Map
 private:
     Tile tiles[MAP_ROWS][MAP_COLS]; // The grid of tiles
     int doorRow, doorCol;          // Position of the door
+    int enemyAttackSwitch;          // To slow down the speed of attacking
 
 public:
     Map();

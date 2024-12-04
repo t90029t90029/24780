@@ -4,7 +4,7 @@
 #include <ctime>
 #include <iostream>
 
-Map::Map() : doorRow(-1), doorCol(-1)
+Map::Map() : doorRow(-1), doorCol(-1), enemyAttackSwitch(0)
 {
     // Initialize random seed if needed
 }
@@ -222,16 +222,20 @@ Tile* Map::GetTile(int row, int col)
 
 bool Map::EnemyActions()
 {
-    for (int row = 0; row < MAP_ROWS; ++row)
-    {
-        for (int col = 0; col < MAP_COLS; ++col)
+    ++enemyAttackSwitch;
+    
+    if (enemyAttackSwitch % 5 == 0) {
+        for (int row = 0; row < MAP_ROWS; ++row)
         {
-            Enemy* enemy = tiles[row][col].GetEnemy();
-            if (enemy != nullptr)
+            for (int col = 0; col < MAP_COLS; ++col)
             {
-                // Call the enemy's attack function
-                if (enemy->Attack(*this)) {
-                    return true;
+                Enemy* enemy = tiles[row][col].GetEnemy();
+                if (enemy != nullptr)
+                {
+                    // Call the enemy's attack function
+                    if (enemy->Attack(*this)) {
+                        return true;
+                    }
                 }
             }
         }

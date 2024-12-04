@@ -233,7 +233,7 @@ void Hero::Attack(Map &map, YsSoundPlayer &player)
 {
     if (itemOnHand)
     {
-        // Play weapon sound
+        player.Stop(itemOnHand->GetSound());  // Stop the sound if it is already playing
         player.PlayOneShot(itemOnHand->GetSound());
     }
     
