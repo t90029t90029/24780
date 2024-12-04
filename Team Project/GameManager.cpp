@@ -1,6 +1,7 @@
 #include "Map.h"
 #include "Hero.h"
 #include "fssimplewindow.h"
+#include "yssimplesound.h"
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
@@ -9,6 +10,11 @@ int main()
 {
     Map map;
     Hero *hero = nullptr;
+    
+    // Sound setup
+    YsSoundPlayer player;
+    player.MakeCurrent();
+    player.Start();
 
     FsChangeToProgramDir();
     // Seed the random number generator
@@ -60,19 +66,19 @@ int main()
         switch (key)
         {
             case FSKEY_UP:
-                hero->MoveUp(map);
+                hero->MoveUp(map, player);
                 break;
             case FSKEY_DOWN:
-                hero->MoveDown(map);
+                hero->MoveDown(map, player);
                 break;
             case FSKEY_LEFT:
-                hero->MoveLeft(map);
+                hero->MoveLeft(map, player);
                 break;
             case FSKEY_RIGHT:
-                hero->MoveRight(map);
+                hero->MoveRight(map, player);
                 break;
             case FSKEY_SPACE:
-                hero->Attack(map);
+                hero->Attack(map, player);
                 break;
             default:
                 break;

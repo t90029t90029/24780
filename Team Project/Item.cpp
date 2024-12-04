@@ -37,6 +37,11 @@ int Item::GetDamage() const
     return damage;
 }
 
+YsSoundPlayer::SoundData &Item::GetSound()
+{
+    return sound;
+}
+
 int Item::GetRow() const
 {
     return row;

@@ -2,6 +2,9 @@
 #define HERO_H
 
 #include "yspng.h"
+#include "yssimplesound.h"
+
+class Item;
 
 enum Direction
 {
@@ -21,6 +24,7 @@ private:
     int damage;
     int row, col;
     Direction facingDirection;
+    Item* itemOnHand;
 
     // Images for different directions
     YsRawPngDecoder heroUpImage;
@@ -48,6 +52,9 @@ public:
     int GetCol() const;
 
     void SetPosition(int row, int col);
+    
+    Item* GetItemOnHand() const;
+    void SetItemOnHand(Item* item);
 
     // Combat
     void TakeDamage(int amount);
@@ -57,17 +64,17 @@ public:
     void Draw() const;
 
     // Movement
-    void MoveUp(Map &map);
-    void MoveDown(Map &map);
-    void MoveLeft(Map &map);
-    void MoveRight(Map &map);
-    void MoveTo(int newRow, int newCol, Map &map);
+    void MoveUp(Map &map, YsSoundPlayer &player);
+    void MoveDown(Map &map, YsSoundPlayer &player);
+    void MoveLeft(Map &map, YsSoundPlayer &player);
+    void MoveRight(Map &map, YsSoundPlayer &player);
+    void MoveTo(int newRow, int newCol, Map &map, YsSoundPlayer &player);
 
     // Spawning
     void SpawnPlayer(int row, int col);
 
     // Attacking
-    void Attack(Map &map);
+    void Attack(Map &map, YsSoundPlayer &player);
 };
 
 #endif

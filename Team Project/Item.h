@@ -26,6 +26,7 @@ public:
     int GetRange() const;
     int GetHeal() const;
     int GetDamage() const;
+    YsSoundPlayer::SoundData &GetSound();
 
     int GetRow() const;
     int GetCol() const;

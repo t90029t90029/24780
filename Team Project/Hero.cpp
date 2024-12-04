@@ -9,7 +9,7 @@
 // Constructor
 Hero::Hero(int health, int attackRange, int damage)
     : health(health), attackRange(attackRange), damage(damage),
-      row(0), col(0), facingDirection(DOWN)
+row(0), col(0), facingDirection(DOWN), itemOnHand(nullptr)
 {
     // Images will be loaded in SpawnPlayer
 }
@@ -17,7 +17,10 @@ Hero::Hero(int health, int attackRange, int damage)
 // Destructor
 Hero::~Hero()
 {
-    // No dynamic memory allocation, nothing to clean up
+    if (itemOnHand)
+    {
+        delete itemOnHand;
+    }
 }
 
 // Spawning
@@ -152,49 +155,45 @@ void Hero::Draw() const
 }
 
 // Movement methods with debug output
-void Hero::MoveUp(Map &map)
+void Hero::MoveUp(Map &map, YsSoundPlayer &player)
 {
     map.GetTile(row, col)->SetBaseType(TILE_EMPTY);
     facingDirection = UP;
-    MoveTo(row - 1, col, map);
+    MoveTo(row - 1, col, map, player);
 }
 
-void Hero::MoveDown(Map &map)
+void Hero::MoveDown(Map &map, YsSoundPlayer &player)
 {
     map.GetTile(row, col)->SetBaseType(TILE_EMPTY);
     facingDirection = DOWN;
-    MoveTo(row + 1, col, map);
+    MoveTo(row + 1, col, map, player);
 }
 
-void Hero::MoveLeft(Map &map)
+void Hero::MoveLeft(Map &map, YsSoundPlayer &player)
 {
     map.GetTile(row, col)->SetBaseType(TILE_EMPTY);
     facingDirection = LEFT;
-    MoveTo(row, col - 1, map);
+    MoveTo(row, col - 1, map, player);
 }
 
-void Hero::MoveRight(Map &map)
+void Hero::MoveRight(Map &map, YsSoundPlayer &player)
 {
     map.GetTile(row, col)->SetBaseType(TILE_EMPTY);
     facingDirection = RIGHT;
-    MoveTo(row, col + 1, map);
+    MoveTo(row, col + 1, map, player);
 }
 
-void Hero::MoveTo(int newRow, int newCol, Map &map)
+void Hero::MoveTo(int newRow, int newCol, Map &map, YsSoundPlayer &player)
 {
     if (!map.IsAccessible(newRow, newCol))
         return;
 
-    // Move hero
-    // Clear the previous tile
     map.SetHero(row, col, nullptr);
     map.GetTile(row, col)->SetBaseType(TILE_EMPTY);
 
-    // Update hero's position
     row = newRow;
     col = newCol;
 
-    // Set the new tile
     map.SetHero(row, col, this);
     map.GetTile(row, col)->SetBaseType(TILE_HERO);
 
@@ -202,29 +201,46 @@ void Hero::MoveTo(int newRow, int newCol, Map &map)
     Item *item = map.GetItem(row, col);
     if (item != nullptr)
     {
-        // Pick up item
         std::cout << "Picked up item: " << item->GetName() << std::endl;
 
-        // Update hero's attributes based on the item
-        if (item->GetName().compare("Health Potion") == 0) {
+        if (item->GetDamage() > 0) // If the item is a weapon
+        {
+            if (itemOnHand)
+            {
+                std::cout << "Dropping current item: " << itemOnHand->GetName() << std::endl;
+                delete itemOnHand; // Clean up the currently held item
+            }
+            itemOnHand = item; // Equip the new item
+            std::cout << "Equipped item: " << itemOnHand->GetName() << std::endl;
+        }
+        else if (item->GetHeal() > 0) // If the item is consumable
+        {
+            player.PlayOneShot(item->GetSound());
+            
             health += item->GetHeal();
             if (health > 100)
-                health = 100; // Cap health at 100
+                health = 100;
             std::cout << "New HP: " << health << std::endl;
-        } else {
-            attackRange = item->GetRange();
-            damage = item->GetDamage();
+            delete item; // Remove the consumable item
         }
 
         map.SetItem(row, col, nullptr);
-        delete item; // Clean up
     }
 }
 
 // Combat
-void Hero::Attack(Map &map)
+void Hero::Attack(Map &map, YsSoundPlayer &player)
 {
-    for (int range = 1; range <= attackRange; ++range)
+    if (itemOnHand)
+    {
+        // Play weapon sound
+        player.PlayOneShot(itemOnHand->GetSound());
+    }
+    
+    int rangeToUse = itemOnHand ? itemOnHand->GetRange() : attackRange; // Use weapon's range or hero's default
+    int damageToUse = itemOnHand ? itemOnHand->GetDamage() : damage;   // Use weapon's damage or hero's default
+
+    for (int range = 1; range <= rangeToUse; ++range)
     {
         int targetRow = row;
         int targetCol = col;
@@ -259,23 +275,23 @@ void Hero::Attack(Map &map)
         Enemy *enemy = map.GetEnemy(targetRow, targetCol);
         if (enemy != nullptr)
         {
-            enemy->TakeDamage(damage);
+            enemy->TakeDamage(damageToUse);
             std::cout << "Attacked enemy at (" << targetRow << ", " << targetCol << "). Enemy health: " << enemy->GetHealth() << std::endl;
+
             if (!enemy->IsAlive())
             {
                 std::cout << "Enemy defeated!" << std::endl;
-                map.SetEnemy(targetRow, targetCol, nullptr);
+                map.SetEnemy(targetRow, targetCol, nullptr); // Remove the enemy from the map
                 delete enemy; // Clean up
-                map.GetTile(targetRow, targetCol)->SetBaseType(TILE_EMPTY); // To allow the hero to walk through
+                map.GetTile(targetRow, targetCol)->SetBaseType(TILE_EMPTY); // Allow hero to walk through
             }
             return; // Stop attacking after hitting an enemy
         }
-
-        // If no enemy was found on this tile, continue checking the next tile
     }
 
     std::cout << "No enemy in range to attack." << std::endl;
 }
+
 
 
 // Getters and Setters
@@ -317,6 +333,16 @@ int Hero::GetRow() const
 int Hero::GetCol() const
 {
     return col;
+}
+
+Item* Hero::GetItemOnHand() const
+{
+    return itemOnHand;
+}
+
+void Hero::SetItemOnHand(Item* item)
+{
+    itemOnHand = item;
 }
 
 void Hero::SetPosition(int row, int col)
