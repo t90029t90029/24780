@@ -11,7 +11,6 @@ Map::Map() : doorRow(-1), doorCol(-1), enemyAttackSwitch(0)
 
 Map::~Map()
 {
-    // Clean up dynamically allocated items, enemies, and hero
     for (int row = 0; row < MAP_ROWS; ++row)
     {
         for (int col = 0; col < MAP_COLS; ++col)
@@ -19,18 +18,22 @@ Map::~Map()
             if (tiles[row][col].GetItem() != nullptr)
             {
                 delete tiles[row][col].GetItem();
+                tiles[row][col].SetItem(nullptr);
             }
             if (tiles[row][col].GetEnemy() != nullptr)
             {
                 delete tiles[row][col].GetEnemy();
+                tiles[row][col].SetEnemy(nullptr);
             }
             if (tiles[row][col].GetHero() != nullptr)
             {
                 delete tiles[row][col].GetHero();
+                tiles[row][col].SetHero(nullptr);
             }
         }
     }
 }
+
 
 bool Map::LoadFromFile(const std::string &filename)
 {
@@ -220,11 +223,11 @@ Tile* Map::GetTile(int row, int col)
     return &tiles[row][col];
 }
 
-bool Map::EnemyActions()
+bool Map::EnemyActions(Hero &hero)
 {
     ++enemyAttackSwitch;
     
-    if (enemyAttackSwitch % 5 == 0) {
+    if (enemyAttackSwitch % 5  == 0) {
         for (int row = 0; row < MAP_ROWS; ++row)
         {
             for (int col = 0; col < MAP_COLS; ++col)
@@ -232,8 +235,10 @@ bool Map::EnemyActions()
                 Enemy* enemy = tiles[row][col].GetEnemy();
                 if (enemy != nullptr)
                 {
-                    // Call the enemy's attack function
-                    if (enemy->Attack(*this)) {
+                    if (!enemy->Attack(*this)) // Attack if the hero is adjacent
+                    {
+                        enemy->FollowHero(hero, *this); // Otherwise, follow the hero
+                    } else {
                         return true;
                     }
                 }
@@ -242,3 +247,4 @@ bool Map::EnemyActions()
     }
     return false;
 }
+

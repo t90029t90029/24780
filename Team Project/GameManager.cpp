@@ -75,7 +75,7 @@ int main()
                 hero->MoveLeft(map, player);
                 break;
             case FSKEY_RIGHT:
-                hero->MoveRight(map, player  );
+                hero->MoveRight(map, player);
                 break;
             case FSKEY_SPACE:
                 hero->Attack(map, player);
@@ -85,7 +85,7 @@ int main()
         }
         
         // Process enemy actions
-        if (map.EnemyActions()) {
+        if (map.EnemyActions(*hero)) {
             std::cout << "Hero died! You lose!" << std::endl;
             break;
         }

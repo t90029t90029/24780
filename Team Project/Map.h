@@ -40,7 +40,7 @@ public:
 
     Tile *GetTile(int row, int col); // Direct access to a tile
     
-    bool EnemyActions();    // Make all enemies on the map attack once
+    bool EnemyActions(Hero &hero);
 };
 
 #endif

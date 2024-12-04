@@ -5,6 +5,7 @@
 #include "yspng.h"
 
 class Map;
+class Hero;
 
 class Enemy
 {
@@ -39,6 +40,8 @@ public:
 
     // Spawning
     void SpawnEnemy(int row, int col);
+    
+    void FollowHero(const Hero &hero, Map &map);
 };
 
 #endif

@@ -2,6 +2,7 @@
 #include "Hero.h"
 #include "Map.h"
 #include <iostream>
+#include <cmath>
 
 // Constructor
 Enemy::Enemy(int health, int damage)
@@ -51,112 +52,7 @@ void Enemy::SetPosition(int row, int col)
 bool Enemy::Attack(Map &map)
 {
     const int directions[4][2] = { {-1, 0}, {1, 0}, {0, -1}, {0, 1} }; // UP, DOWN, LEFT, RIGHT
-    //Hero* player = map.GetHero(row, col);
-    bool breaked = false;
-    gameTime += 1;
-    
-    for (int i = 0; i < MAP_ROWS; i++)
-    {
-        if (breaked == true)
-        {
-            
-            break;
-        }
-        for (int j = 0; j < MAP_COLS; j++)
-        {
 
-            Hero *hero= map.GetHero(i, j);
-            
-            if (hero != nullptr && gameTime%200 < 5)
-            {
-                
-                printf("here");
-                int prevCol = this->col;
-                int prevRow = this->row;
-
-                breaked = true;
-                printf("%d %d\n", hero->GetRow(), hero->GetCol());
-                if (this->col - hero->GetCol() > 0)
-                {
-                    
-                    this->col -= 1;
-
-                    if ((this->col == hero->GetCol() && this->row == hero->GetRow()) || map.IsAccessible(this->row, this->col) == false)
-                    {
-                        this->col += 1;
-                    }
-                    //this->SetPosition(this->row, this->col);
-
-                }
-
-
-                if ((this->col - hero->GetCol() < 0))
-                {
-
-                    
-                        this->col += 1;
-                        //direction = 1;
-
-                        if ((this->col == hero->GetCol() && this->row == hero->GetRow()) || map.IsAccessible(this->row, this->col) == false)
-                        {
-                            this->col -= 1;
-                        }
-                    
-
-                }
-
-                if ((this->row - hero->GetRow() > 0))
-                {
-
-                    
-                        this->row -= 1;
-                        //direction = 1;
-                        //printf("poop");
-
-                        if ((this->col == hero->GetCol() && row == hero->GetRow()) || map.IsAccessible(this->row,this->col) == false)
-                        {
-                            this->row += 1;
-
-                        }
-                        
-                    
-
-                }
-
-                if ((this->row - hero->GetRow() < 0))
-                {
-                   
-                        this->row += 1;
-                        //direction = 1;
-                        
-                        if ((this->col == hero->GetCol() && this->row == hero->GetRow()) || map.IsAccessible(this->row, this->col) == false)
-                        {
-                            this->row -= 1;
-                            //printf("poop");
-
-                        }
-                     
-
-                }
-                map.GetTile(prevRow, prevCol)->SetBaseType(TILE_EMPTY);
-                //delete hero;
-                break;
-                
-            }
-            //delete player;
-
-        }
-        
-    }
-    if (this->IsAlive())
-    {
-        map.SetEnemy(this->row, this->col, this);
-        map.GetTile(this->row, this->col)->SetBaseType(TILE_ENEMY);
-
-    }
-    
-    
-    
     for (int d = 0; d < 4; ++d)
     {
         int targetRow = row + directions[d][0];
@@ -170,7 +66,6 @@ bool Enemy::Attack(Map &map)
 
         // Check if there is a hero on the target tile
         Hero *hero = map.GetHero(targetRow, targetCol);
-
         if (hero != nullptr)
         {
             hero->TakeDamage(damage);
@@ -188,7 +83,7 @@ bool Enemy::Attack(Map &map)
             return false;
         }
     }
-    
+
     return false;
 }
 
@@ -209,7 +104,6 @@ bool Enemy::IsAlive() const
 // Rendering
 void Enemy::Draw() const
 {
-    
     if (enemyDownImage.rgba != nullptr) // Check if the image is loaded
     {
         int x = col * 40;
@@ -258,7 +152,41 @@ void Enemy::SpawnEnemy(int row, int col)
             }
         }
     }
-    enemyDownImage.Flip();
     std::cout << "Enemy spawned at position: (" << row << ", " << col << ")" << std::endl;
 }
 
+void Enemy::FollowHero(const Hero &hero, Map &map)
+{
+    int heroRow = hero.GetRow();
+    int heroCol = hero.GetCol();
+
+    // Calculate Manhattan distance to the hero
+    int distance = abs(heroRow - row) + abs(heroCol - col);
+
+    if (distance <= 8 && distance > 1) // Example: Follow if within 5 tiles
+    {
+        // Determine the direction to move closer to the hero
+        int moveRow = 0;
+        int moveCol = 0;
+
+        if (heroRow < row) moveRow = -1;
+        else if (heroRow > row) moveRow = 1;
+
+        if (heroCol < col) moveCol = -1;
+        else if (heroCol > col) moveCol = 1;
+
+        int newRow = row + moveRow;
+        int newCol = col + moveCol;
+
+        // Ensure the target position is accessible
+        if (map.IsAccessible(newRow, newCol) && !map.GetEnemy(newRow, newCol))
+        {
+            map.SetEnemy(row, col, nullptr);  // Clear current position
+            map.GetTile(row, col)->SetBaseType(TILE_EMPTY);
+            row = newRow;
+            col = newCol;
+            map.SetEnemy(row, col, this);    // Set new position
+            map.GetTile(row, col)->SetBaseType(TILE_ENEMY);
+        }
+    }
+}
