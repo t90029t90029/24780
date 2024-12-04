@@ -17,6 +17,17 @@ int main()
     player.Start();
 
     FsChangeToProgramDir();
+
+    YsSoundPlayer::SoundData background;
+
+    if (YSOK != background.LoadWav("background.wav") &&
+    YSOK != background.LoadWav("datafiles/background.wav"))
+    {
+        printf("Error!  Cannot load background.wav!\n");
+        return 0;
+    }
+
+    player.PlayBackground(background);
     // Seed the random number generator
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
