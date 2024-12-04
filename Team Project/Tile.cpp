@@ -68,7 +68,7 @@ void Tile::Draw() const
         {
             posx -= 1;
         }
-        if (y >= 360)
+        if (y > 360)
         {
             posy -= 1;
         }
