@@ -152,6 +152,7 @@ void Enemy::SpawnEnemy(int row, int col)
             }
         }
     }
+    enemyDownImage.Flip();
     std::cout << "Enemy spawned at position: (" << row << ", " << col << ")" << std::endl;
 }
 
