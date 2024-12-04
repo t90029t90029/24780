@@ -73,6 +73,7 @@ bool Item::LoadImage(const char *filename)
                 pixel[2] = 255; // Blue
                 pixel[3] = 255; // Make it opaque
             }
+        png.Flip()
         }
         return true;
     }
